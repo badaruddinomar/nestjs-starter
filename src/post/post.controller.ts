@@ -16,10 +16,10 @@ import {
   IDeletePostResponse,
   IGetPostResponse,
   IGetPostsResponse,
-  IPost,
   IUpdatePostResponse,
 } from './post.interface';
 import { CreatePostDto } from './post.dto';
+import { Post as IPost } from './post.entity';
 
 @Controller('post')
 export class PostController {

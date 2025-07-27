@@ -6,11 +6,11 @@ import {
   IDeletePostResponse,
   IGetPostResponse,
   IGetPostsResponse,
-  IPost,
   IUpdatePostResponse,
 } from './post.interface';
 import { CreatePostDto } from './post.dto';
 import { Post } from './post.entity';
+import { Post as IPost } from './post.entity';
 
 export class PostService {
   constructor(

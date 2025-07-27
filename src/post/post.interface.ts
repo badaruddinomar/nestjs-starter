@@ -1,19 +1,13 @@
-export interface IPost {
-  id: number;
-  title: string;
-  content: string;
-  authorName: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
+import { Post } from './post.entity';
+
 export interface IApiResponse<T> {
   success: boolean;
   message: string;
   data: T;
 }
 
-export type ICreatePostResponse = IApiResponse<IPost>;
-export type IGetPostResponse = IApiResponse<IPost>;
-export type IGetPostsResponse = IApiResponse<IPost[]>;
-export type IUpdatePostResponse = IApiResponse<IPost>;
+export type ICreatePostResponse = IApiResponse<Post>;
+export type IGetPostResponse = IApiResponse<Post>;
+export type IGetPostsResponse = IApiResponse<Post[]>;
+export type IUpdatePostResponse = IApiResponse<Post>;
 export type IDeletePostResponse = IApiResponse<null>;
