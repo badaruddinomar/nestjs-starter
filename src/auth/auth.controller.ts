@@ -18,4 +18,10 @@ export class AuthController {
   login(@Body() loginDto: LoginDto): Promise<ILoginResponse> {
     return this.authService.login(loginDto);
   }
+
+  @Post('refresh-token')
+  @HttpCode(HttpStatus.OK)
+  refreshToken(@Body('refreshToken') refreshToken: string) {
+    return this.authService.refreshToken(refreshToken);
+  }
 }
