@@ -114,4 +114,9 @@ export class AuthService {
     }
     return result;
   }
+  async getProfile(id: number): Promise<User> {
+    const user = await this.userRepository.findOneBy({ id });
+    if (!user) throw new NotFoundException('User not found');
+    return user;
+  }
 }
