@@ -1,4 +1,4 @@
-export interface Post {
+export interface IPost {
   id: number;
   title: string;
   content: string;
@@ -11,5 +11,9 @@ export interface IApiResponse<T> {
   message: string;
   data: T;
 }
-export type IGetPostResponse = IApiResponse<Post>;
-export type ICreatePostResponse = IApiResponse<Post>;
+
+export type ICreatePostResponse = IApiResponse<IPost>;
+export type IGetPostResponse = IApiResponse<IPost>;
+export type IGetPostsResponse = IApiResponse<IPost[]>;
+export type IUpdatePostResponse = IApiResponse<IPost>;
+export type IDeletePostResponse = IApiResponse<null>;
