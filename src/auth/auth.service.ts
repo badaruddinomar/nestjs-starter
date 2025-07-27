@@ -1,15 +1,25 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './user.entity';
 import { Repository } from 'typeorm';
-import { RegisterDto } from './auth.dto';
+import { LoginDto, RegisterDto } from './auth.dto';
 import * as bcrypt from 'bcrypt';
-import { IRegisterResponse } from './auth.interface';
+import { IRegisterResponse, ILoginResponse } from './auth.interface';
+import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AuthService {
   constructor(
     @InjectRepository(User) private readonly userRepository: Repository<User>,
+    private readonly jwtService: JwtService,
+    private readonly configService: ConfigService,
   ) {}
 
   async register(registerDto: RegisterDto): Promise<IRegisterResponse> {
@@ -33,5 +43,75 @@ export class AuthService {
       message: 'Registered successfully',
       data: userData,
     };
+  }
+
+  async login(loginDto: LoginDto): Promise<ILoginResponse> {
+    const { email, password } = loginDto;
+    const user = await this.userRepository.findOneBy({ email });
+    if (!user) throw new BadRequestException('User not found');
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) throw new BadRequestException('Invalid credentials');
+
+    const { accessToken, refreshToken } = this.generateToken(user, 'BOTH');
+
+    const { password: _, ...userData } = user;
+
+    return {
+      success: true,
+      message: 'Login successfull',
+      data: userData,
+      meta: {
+        ...(accessToken && { accessToken }),
+        ...(refreshToken && { refreshToken }),
+      },
+    };
+  }
+  async refreshToken(refreshToken: string) {
+    try {
+      const payload = this.jwtService.verify(refreshToken, {
+        secret: this.configService.get<string>('JWT_SECRET'),
+      });
+      const user = await this.userRepository.findOneBy({ id: payload.id });
+      if (!user) throw new UnauthorizedException('Unauthorized');
+      const { accessToken } = this.generateToken(user, 'ACCESS');
+      return {
+        success: true,
+        message: 'Refresh token successfull',
+        data: { accessToken },
+      };
+    } catch (error) {
+      throw new BadRequestException('Invalid refresh token');
+    }
+  }
+  private generateToken(user: User, generate: 'ACCESS' | 'REFRESH' | 'BOTH') {
+    const jwtSecret = this.configService.get<string>('JWT_SECRET');
+    const accessTokenExpiry = this.configService.get<string>(
+      'ACCESS_TOKEN_EXPIRY',
+    );
+    const refreshTokenExpiry = this.configService.get<string>(
+      'REFRESH_TOKEN_EXPIRY',
+    );
+    const payload = {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+    };
+    const result: Partial<{ accessToken: string; refreshToken: string }> = {};
+
+    if (generate === 'ACCESS' || generate === 'BOTH') {
+      result.accessToken = this.jwtService.sign(payload, {
+        secret: jwtSecret,
+        expiresIn: accessTokenExpiry,
+      });
+    }
+
+    if (generate === 'REFRESH' || generate === 'BOTH') {
+      result.refreshToken = this.jwtService.sign(payload, {
+        secret: jwtSecret,
+        expiresIn: refreshTokenExpiry,
+      });
+    }
+    return result;
   }
 }

@@ -4,6 +4,9 @@ export interface IApiResponse<T> {
   success: boolean;
   message: string;
   data: T;
+  meta?: {
+    [key: string]: string;
+  };
 }
 
 export type ICreatePostResponse = IApiResponse<Post>;
