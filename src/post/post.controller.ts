@@ -9,6 +9,7 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  UseGuards,
 } from '@nestjs/common';
 import { PostService } from './post.service';
 import {
@@ -20,15 +21,22 @@ import {
 } from './post.interface';
 import { CreatePostDto } from './post.dto';
 import { Post as IPost } from './post.entity';
+import { JwtAuthGuard } from 'src/auth/guard/auth.guard';
+import { CurrentUser } from 'src/auth/decorators/currentUser.decorator';
+import { User } from 'src/user/user.entity';
 
 @Controller('post')
 export class PostController {
   constructor(private readonly postService: PostService) {}
 
   @Post()
+  @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.CREATED)
-  createPost(@Body() dto: CreatePostDto): Promise<ICreatePostResponse> {
-    return this.postService.createPost(dto);
+  createPost(
+    @Body() data: CreatePostDto,
+    @CurrentUser() user: User,
+  ): Promise<ICreatePostResponse> {
+    return this.postService.createPost(data, user);
   }
 
   @Get(':id')

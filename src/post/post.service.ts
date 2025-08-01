@@ -11,6 +11,7 @@ import {
 import { CreatePostDto } from './post.dto';
 import { Post } from './post.entity';
 import { Post as IPost } from './post.entity';
+import { User } from 'src/user/user.entity';
 
 export class PostService {
   constructor(
@@ -18,8 +19,15 @@ export class PostService {
     private postRepository: Repository<Post>,
   ) {}
 
-  async createPost(data: CreatePostDto): Promise<ICreatePostResponse> {
-    const newPost = this.postRepository.create(data);
+  async createPost(
+    data: CreatePostDto,
+    user: User,
+  ): Promise<ICreatePostResponse> {
+    const postData = {
+      ...data,
+      user: { id: user.id },
+    };
+    const newPost = this.postRepository.create(postData);
     await this.postRepository.save(newPost);
     return {
       success: true,
@@ -37,7 +45,10 @@ export class PostService {
   }
 
   async getPost(id: number): Promise<IGetPostResponse> {
-    const post = await this.postRepository.findOneBy({ id });
+    const post = await this.postRepository.findOne({
+      where: { id },
+      relations: ['user'],
+    });
     if (!post) throw new NotFoundException('Post not found');
     return {
       success: true,

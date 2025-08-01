@@ -6,7 +6,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { User } from './user.entity';
+import { User } from '../user/user.entity';
 import { Repository } from 'typeorm';
 import { LoginDto, RegisterDto } from './auth.dto';
 import * as bcrypt from 'bcrypt';
@@ -30,7 +30,6 @@ export class AuthService {
 
   async register(registerDto: RegisterDto): Promise<IRegisterResponse> {
     const { name, email, password } = registerDto;
-    console.log(registerDto);
     const user = await this.userRepository.findOne({ where: { email } });
 
     if (user) throw new ConflictException('User already exists');
@@ -43,17 +42,21 @@ export class AuthService {
       password: hashPassword,
     });
     const savedUser = await this.userRepository.save(newUser);
-    const { password: _, ...userData } = savedUser;
     return {
       success: true,
       message: 'Registered successfully',
-      data: userData,
+      data: savedUser,
     };
   }
 
   async login(loginDto: LoginDto): Promise<ILoginResponse> {
     const { email, password } = loginDto;
-    const user = await this.userRepository.findOneBy({ email });
+    const user = await this.userRepository
+      .createQueryBuilder('user')
+      .addSelect('user.password') // explicitly select password
+      .where('user.email = :email', { email })
+      .getOne();
+
     if (!user) throw new BadRequestException('User not found');
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
@@ -61,12 +64,10 @@ export class AuthService {
 
     const { accessToken, refreshToken } = this.generateToken(user, 'BOTH');
 
-    const { password: _, ...userData } = user;
-
     return {
       success: true,
       message: 'Login successfull',
-      data: userData,
+      data: user,
       meta: {
         ...(accessToken && { accessToken }),
         ...(refreshToken && { refreshToken }),
@@ -119,27 +120,5 @@ export class AuthService {
       });
     }
     return result;
-  }
-  async getProfile(id: number): Promise<IProfileResponse> {
-    const user = await this.userRepository.findOneBy({ id });
-    if (!user) throw new NotFoundException('User not found');
-    const { password: _, ...userData } = user;
-    return {
-      success: true,
-      message: 'Profile retrived successfully',
-      data: userData,
-    };
-  }
-  async getUsers(): Promise<IUsersResponse> {
-    const users = await this.userRepository.find();
-    const userData = users.map((user) => {
-      const { password: _, ...userData } = user;
-      return userData;
-    });
-    return {
-      success: true,
-      message: 'Users retrived successfully',
-      data: userData,
-    };
   }
 }
