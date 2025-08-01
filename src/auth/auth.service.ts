@@ -10,7 +10,13 @@ import { User } from './user.entity';
 import { Repository } from 'typeorm';
 import { LoginDto, RegisterDto } from './auth.dto';
 import * as bcrypt from 'bcrypt';
-import { IRegisterResponse, ILoginResponse } from './auth.interface';
+import {
+  IRegisterResponse,
+  ILoginResponse,
+  IJwtPayload,
+  IProfileResponse,
+  IUsersResponse,
+} from './auth.interface';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 
@@ -92,7 +98,7 @@ export class AuthService {
     const refreshTokenExpiry = this.configService.get<string>(
       'REFRESH_TOKEN_EXPIRY',
     );
-    const payload = {
+    const payload: IJwtPayload = {
       id: user.id,
       email: user.email,
       role: user.role,
@@ -114,9 +120,26 @@ export class AuthService {
     }
     return result;
   }
-  async getProfile(id: number): Promise<User> {
+  async getProfile(id: number): Promise<IProfileResponse> {
     const user = await this.userRepository.findOneBy({ id });
     if (!user) throw new NotFoundException('User not found');
-    return user;
+    const { password: _, ...userData } = user;
+    return {
+      success: true,
+      message: 'Profile retrived successfully',
+      data: userData,
+    };
+  }
+  async getUsers(): Promise<IUsersResponse> {
+    const users = await this.userRepository.find();
+    const userData = users.map((user) => {
+      const { password: _, ...userData } = user;
+      return userData;
+    });
+    return {
+      success: true,
+      message: 'Users retrived successfully',
+      data: userData,
+    };
   }
 }

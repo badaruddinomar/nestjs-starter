@@ -11,3 +11,11 @@ export interface IApiResponse<T> {
 
 export type IRegisterResponse = IApiResponse<Omit<User, 'password'>>;
 export type ILoginResponse = IApiResponse<Omit<User, 'password'>>;
+export type IProfileResponse = IApiResponse<Omit<User, 'password'>>;
+export type IUsersResponse = IApiResponse<Omit<User, 'password'>[]>;
+
+export interface IJwtPayload {
+  id: number;
+  email: string;
+  role: string;
+}

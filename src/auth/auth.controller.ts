@@ -1,7 +1,26 @@
-import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  ParseIntPipe,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto, RegisterDto } from './auth.dto';
-import { ILoginResponse, IRegisterResponse } from './auth.interface';
+import {
+  ILoginResponse,
+  IProfileResponse,
+  IRegisterResponse,
+  IUsersResponse,
+} from './auth.interface';
+import { JwtAuthGuard } from './guard/auth.guard';
+import { RolesGuard } from './guard/roles.guard';
+import { Roles } from './decorators/roles.decorator';
+import { UserRole } from './user.entity';
 
 @Controller('auth')
 export class AuthController {
@@ -23,5 +42,19 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   refreshToken(@Body('refreshToken') refreshToken: string) {
     return this.authService.refreshToken(refreshToken);
+  }
+  @Get('profile')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.OK)
+  getProfile(@Param('id', ParseIntPipe) id: number): Promise<IProfileResponse> {
+    return this.authService.getProfile(id);
+  }
+
+  @Get('users')
+  @Roles(UserRole.ADMIN)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @HttpCode(HttpStatus.OK)
+  getUsers(): Promise<IUsersResponse> {
+    return this.authService.getUsers();
   }
 }
