@@ -1,26 +1,8 @@
-import {
-  Body,
-  Controller,
-  Get,
-  HttpCode,
-  HttpStatus,
-  Param,
-  ParseIntPipe,
-  Post,
-  UseGuards,
-} from '@nestjs/common';
+import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto, RegisterDto } from './auth.dto';
-import {
-  ILoginResponse,
-  IProfileResponse,
-  IRegisterResponse,
-  IUsersResponse,
-} from './auth.interface';
-import { JwtAuthGuard } from './guard/auth.guard';
-import { RolesGuard } from './guard/roles.guard';
-import { Roles } from './decorators/roles.decorator';
-import { UserRole } from '../user/user.entity';
+import { ILoginResponse, IRegisterResponse } from './auth.interface';
+import { Throttle } from '@nestjs/throttler';
 
 @Controller('auth')
 export class AuthController {
@@ -32,6 +14,7 @@ export class AuthController {
     return this.authService.register(registerDto);
   }
 
+  @Throttle({ default: { limit: 3, ttl: 60000 } })
   @Post('login')
   @HttpCode(HttpStatus.OK)
   login(@Body() loginDto: LoginDto): Promise<ILoginResponse> {
