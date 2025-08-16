@@ -5,7 +5,7 @@ export interface IApiResponse<T> {
   message: string;
   data: T;
   meta?: {
-    [key: string]: string;
+    [key: string]: unknown;
   };
 }
 

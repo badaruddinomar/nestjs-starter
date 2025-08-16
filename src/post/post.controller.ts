@@ -9,6 +9,7 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { PostService } from './post.service';
@@ -19,7 +20,7 @@ import {
   IGetPostsResponse,
   IUpdatePostResponse,
 } from './post.interface';
-import { CreatePostDto } from './post.dto';
+import { CreatePostDto, GetPostsQueryDto } from './post.dto';
 import { Post as IPost } from './post.entity';
 import { JwtAuthGuard } from 'src/auth/guard/auth.guard';
 import { CurrentUser } from 'src/auth/decorators/currentUser.decorator';
@@ -47,8 +48,8 @@ export class PostController {
 
   @Get()
   @HttpCode(HttpStatus.OK)
-  getPosts(): Promise<IGetPostsResponse> {
-    return this.postService.getPosts();
+  getPosts(@Query() query: GetPostsQueryDto): Promise<IGetPostsResponse> {
+    return this.postService.getPosts(query);
   }
 
   @Patch(':id')

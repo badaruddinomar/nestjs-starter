@@ -6,11 +6,13 @@ import { PostModule } from './post/post.module';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from './auth/auth.module';
+import { CacheModule } from '@nestjs/cache-manager';
 
 @Module({
   imports: [
     UserModule,
     PostModule,
+    CacheModule.register({ isGlobal: true, ttl: 30000 }),
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: 'localhost',
